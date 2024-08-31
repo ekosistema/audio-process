@@ -46,18 +46,18 @@ chmod +x audio_process.py
 
 # Create a wrapper script
 echo "Creating a wrapper script..."
-cat << EOF > audio_process_tool
+cat << EOF > audio_process
 #!/bin/bash
 source $(pwd)/audio_process_env/bin/activate
 python3 $(pwd)/audio_process.py "\$@"
 EOF
 
-chmod +x audio_process_tool
+chmod +x audio_process
 
 # Add the script to PATH
 echo "Adding the script to PATH..."
 mkdir -p ~/.local/bin
-mv audio_process_tool ~/.local/bin/
+mv audio_process ~/.local/bin/
 
 if ! grep -q "export PATH=\$PATH:~/.local/bin" ~/.bashrc; then
     echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
@@ -65,4 +65,4 @@ if ! grep -q "export PATH=\$PATH:~/.local/bin" ~/.bashrc; then
 fi
 
 echo "Installation completed successfully!"
-echo "You can now run the Audio Processor Tool by typing 'audio_process_tool' in your terminal."
+echo "You can now run the Audio Processor Tool by typing 'audio_process' in your terminal."
