@@ -4,9 +4,9 @@
 1. Introduction
 2. Installation
 3. Usage
-   3.1 Shuffle Audio
-   3.2 Auto Fade
-   3.3 Auto Loop
+   1. Shuffle Audio
+   2. Auto Fade
+   3. Auto Loop
 4. Troubleshooting
 5. File Descriptions
 
@@ -51,7 +51,7 @@ You will be presented with a menu offering four options:
 3. Auto Loop
 4. Exit
 
-### 3.1 Shuffle Audio
+### 1. Shuffle Audio
 
 This option allows you to shuffle audio files by splitting them into chunks and randomly rearranging them.
 
@@ -63,7 +63,7 @@ When selected, you'll need to provide:
 
 The shuffled audio files will be saved in a "shuffled" subfolder within the input folder.
 
-### 3.2 Auto Fade
+### 2. Auto Fade
 
 This option applies a fade-in and fade-out effect to your audio files.
 
@@ -74,7 +74,7 @@ When selected, you'll need to provide:
 
 The processed audio files will be saved in a "faded" subfolder within the input folder.
 
-### 3.3 Auto Loop
+### 3. Auto Loop
 
 This option allows you to create looped versions of your audio files.
 
