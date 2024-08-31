@@ -16,19 +16,14 @@ The Audio Process Tool is a versatile command-line application that allows you t
 
 ## 2. Installation
 
-To install the Audio Process Tool, follow these steps:
+To install the Audio Process Tool directly from GitHub, follow these steps:
 
-1. Download the `audio_process_installer.sh` script.
-2. Open a terminal and navigate to the directory containing the script.
-3. Make the script executable by running:
+1. Open a terminal.
+2. Run the following command:
    ```
-   chmod +x audio_process_installer.sh
+   bash <(curl -s https://raw.githubusercontent.com/ekosistema/audio-process/main/install.sh)
    ```
-4. Run the installation script:
-   ```
-   ./audio_process_installer.sh
-   ```
-5. Follow the on-screen prompts to complete the installation.
+3. Follow the on-screen prompts to complete the installation.
 
 The installer will:
 - Check for Python 3 installation
@@ -95,15 +90,16 @@ The looped audio files will be saved in a "looped" subfolder within the input fo
 ## 4. Troubleshooting
 
 - If you encounter a "command not found" error when trying to run `audio_process`, make sure you've restarted your terminal or run `source ~/.bashrc` after installation.
-- If you get errors related to missing dependencies, try running the installer script again.
+- If you get errors related to missing dependencies, try running the installation command again.
 - For issues with processing specific audio files, ensure that ffmpeg is correctly installed and that the files are in a supported format (.mp3, .wav, .ogg, or .flac).
+- If you have problems with the installation script, make sure you have an active internet connection and that you can access GitHub.
 
 ## 5. File Descriptions
 
 The Audio Process Tool consists of two main files:
 
-1. `audio_process_installer.sh`: This bash script handles the installation of the tool, including setting up the environment and dependencies.
+1. `install.sh`: This bash script handles the installation of the tool, including setting up the environment and dependencies. It is hosted on GitHub and can be run directly using curl.
 
-2. `audio_process.py`: This Python script contains the main functionality of the Audio Process Tool, including the shuffle_audio, auto_fade, and auto_loop functions, as well as the main menu interface.
+2. `audio_process.py`: This Python script contains the main functionality of the Audio Process Tool, including the shuffle_audio, auto_fade, and auto_loop functions, as well as the main menu interface. It is downloaded during the installation process.
 
-These files work together to provide a seamless audio process experience. The installer script sets up everything needed to run the Python script, and the Python script handles the actual audio process tasks.
+These files work together to provide a seamless audio process experience. The installer script sets up everything needed to run the Python script, and the Python script handles the actual audio processing tasks.

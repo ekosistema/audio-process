@@ -37,9 +37,9 @@ else
     exit 1
 fi
 
-# Download the main script
-echo "Downloading the main script..."
-curl -o audio_process.py https://raw.githubusercontent.com/ekosistema/audio-process/main/audio_process.py
+# Download the main script from GitHub
+echo "Downloading the main script from GitHub..."
+curl -O https://raw.githubusercontent.com/ekosistema/audio-process/main/audio_process.py
 
 # Make the script executable
 chmod +x audio_process.py
