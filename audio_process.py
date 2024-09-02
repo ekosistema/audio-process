@@ -35,13 +35,13 @@ def shuffle_audio(args):
         audio = AudioSegment.from_file(input_path)
         
         if max_duration and duration > max_duration:
-            audio = audio[:max_duration * 1000]
+            audio = audio[:int(max_duration * 1000)]
         
-        chunk_duration = int(len(audio) / num_chunks)
+        chunk_duration = len(audio) // num_chunks
         chunks = [audio[i*chunk_duration:(i+1)*chunk_duration] for i in range(num_chunks)]
         
-        fade_duration = len(audio) / 20
-        chunks = [chunk.fade_out(duration=int(fade_duration)) for chunk in chunks]
+        fade_duration = len(audio) // 20
+        chunks = [chunk.fade_out(duration=fade_duration) for chunk in chunks]
         
         chunk_files = []
         for i, chunk in enumerate(chunks):
@@ -82,12 +82,12 @@ def auto_fade(args):
         
         audio = AudioSegment.from_file(input_path)
         
-        if max_duration and len(audio) > max_duration:
-            audio = audio[:max_duration]
+        if max_duration and len(audio) > max_duration * 1000:
+            audio = audio[:int(max_duration * 1000)]
             fade_out_duration = int(len(audio) * 0.125)
             audio = audio.fade_out(fade_out_duration)
         
-        audio = audio.fade_in(fade_duration * 1000).fade_out(fade_duration * 1000)
+        audio = audio.fade_in(int(fade_duration * 1000)).fade_out(int(fade_duration * 1000))
         audio.export(output_path, format=file.split('.')[-1])
     
     print("Auto-fading completed successfully!")
@@ -142,7 +142,7 @@ def main_menu():
         if choice == '1':
             args = {
                 "input_folder": input("Enter input folder path: "),
-                "min_duration": int(input("Enter minimum duration in seconds: ")),
+                "min_duration": int(input("Enter minimum duration in seconds (default: 0): ") or 0),
                 "max_duration": int(input("Enter maximum duration to trim (optional, press Enter to skip): ") or 0),
                 "num_chunks": int(input("Enter number of chunks to split (default: 8): ") or 8)
             }
@@ -151,16 +151,16 @@ def main_menu():
             args = {
                 "input_folder": input("Enter input folder path: "),
                 "max_duration": int(input("Enter maximum duration in seconds (optional, press Enter to skip): ") or 0),
-                "fade_duration": int(input("Enter fade duration in seconds: "))
+                "fade_duration": int(input("Enter fade duration in seconds (default: 1): ") or 1)
             }
             auto_fade(args)
         elif choice == '3':
             args = {
                 "input_folder": input("Enter input folder path: "),
-                "min_duration": float(input("Enter minimum duration in seconds: ")),
+                "min_duration": float(input("Enter minimum duration in seconds (default: 0): ") or 0),
                 "max_duration": float(input("Enter maximum duration in seconds (optional, press Enter to skip): ") or 0),
                 "iterations": int(input("Enter number of iterations (default: 4): ") or 4),
-                "fade_duration": float(input("Enter fade duration in seconds: "))
+                "fade_duration": float(input("Enter fade duration in seconds (default: 1): ") or 1)
             }
             auto_loop(args)
         elif choice == '4':
