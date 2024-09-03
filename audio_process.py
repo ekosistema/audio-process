@@ -9,7 +9,7 @@ def get_audio_duration(file_path):
     return float(result.stdout)
 
 def shuffle_audio(args):
-    input_folder = args["input_folder"]
+    input_folder = args.get("input_folder", os.getcwd())
     min_duration = args["min_duration"]
     max_duration = args["max_duration"]
     num_chunks = args["num_chunks"]
@@ -65,7 +65,7 @@ def shuffle_audio(args):
     print("Audio shuffling completed successfully!")
 
 def auto_fade(args):
-    input_folder = args["input_folder"]
+    input_folder = args.get("input_folder", os.getcwd())
     max_duration = args["max_duration"]
     fade_duration = args["fade_duration"]
 
@@ -93,7 +93,7 @@ def auto_fade(args):
     print("Auto-fading completed successfully!")
 
 def auto_loop(args):
-    input_folder = args["input_folder"]
+    input_folder = args.get("input_folder", os.getcwd())
     min_duration = args["min_duration"]
     max_duration = args["max_duration"]
     iterations = args["iterations"]
@@ -130,42 +130,103 @@ def auto_loop(args):
         looped_audio.export(output_path, format=audio_file.split('.')[-1])
     
     print("Auto-looping completed successfully!")
+
+def add_silence(args):
+    input_folder = args.get("input_folder", os.getcwd())
+    silence_duration = args["silence_duration"]
+    position = args["position"]
+
+    output_folder = os.path.join(input_folder, "silenced")
+    os.makedirs(output_folder, exist_ok=True)
+
+    audio_files = [f for f in os.listdir(input_folder) if f.endswith(('.mp3', '.wav', '.ogg', '.flac'))]
     
+    for file in tqdm(audio_files, desc="Adding Silence"):
+        input_path = os.path.join(input_folder, file)
+        output_path = os.path.join(output_folder, f"silenced_{file}")
+        
+        audio = AudioSegment.from_file(input_path)
+        silence = AudioSegment.silent(duration=silence_duration * 1000)  # Convert to milliseconds
+        
+        if position == 'a':
+            modified_audio = silence + audio
+        elif position == 'd':
+            modified_audio = audio + silence
+        elif position == 'b':
+            modified_audio = silence + audio + silence
+        else:
+            modified_audio = audio
+        
+        modified_audio.export(output_path, format=file.split('.')[-1])
+    
+    print("Silence addition completed successfully!")
+
+def get_int_input(prompt, default=0):
+    while True:
+        try:
+            user_input = input(prompt)
+            if user_input.strip() == '':
+                return default
+            return int(user_input)
+        except ValueError:
+            print("Por favor, introduce un número entero válido.")
+
+def get_float_input(prompt, default=0.0):
+    while True:
+        try:
+            user_input = input(prompt)
+            if user_input.strip() == '':
+                return default
+            return float(user_input)
+        except ValueError:
+            print("Por favor, introduce un número válido.")
+
 def main_menu():
     while True:
         print("\nAudio Processing Menu")
         print("1. Shuffle Audio")
         print("2. Auto Fade")
         print("3. Auto Loop")
-        print("4. Exit")
+        print("4. Add Silence")
+        print("5. Exit")
         
-        choice = input("Enter your choice (1-4): ")
+        choice = input("Enter your choice (1-5): ")
         
         if choice == '1':
             args = {
-                "input_folder": input("Enter input folder path: "),
-                "min_duration": int(input("Enter minimum duration in seconds (default: 0): ") or 0),
-                "max_duration": int(input("Enter maximum duration to trim (optional, press Enter to skip): ") or 0),
-                "num_chunks": int(input("Enter number of chunks to split (default: 8): ") or 8)
+                "input_folder": input("Enter input folder path (press Enter for current folder): ") or os.getcwd(),
+                "min_duration": get_int_input("Enter minimum duration in seconds (default: 0): ", 0),
+                "max_duration": get_int_input("Enter maximum duration to trim (optional, press Enter to skip): ", 0),
+                "num_chunks": get_int_input("Enter number of chunks to split (default: 8): ", 8)
             }
             shuffle_audio(args)
         elif choice == '2':
             args = {
-                "input_folder": input("Enter input folder path: "),
-                "max_duration": int(input("Enter maximum duration in seconds (optional, press Enter to skip): ") or 0),
-                "fade_duration": int(input("Enter fade duration in seconds (default: 1): ") or 1)
+                "input_folder": input("Enter input folder path (press Enter for current folder): ") or os.getcwd(),
+                "max_duration": get_int_input("Enter maximum duration in seconds (optional, press Enter to skip): ", 0),
+                "fade_duration": get_int_input("Enter fade duration in seconds (default: 1): ", 1)
             }
             auto_fade(args)
         elif choice == '3':
             args = {
-                "input_folder": input("Enter input folder path: "),
-                "min_duration": float(input("Enter minimum duration in seconds (default: 0): ") or 0),
-                "max_duration": float(input("Enter maximum duration in seconds (optional, press Enter to skip): ") or 0),
-                "iterations": int(input("Enter number of iterations (default: 4): ") or 4),
-                "fade_duration": float(input("Enter fade duration in seconds (default: 1): ") or 1)
+                "input_folder": input("Enter input folder path (press Enter for current folder): ") or os.getcwd(),
+                "min_duration": get_float_input("Enter minimum duration in seconds (default: 0): ", 0),
+                "max_duration": get_float_input("Enter maximum duration in seconds (optional, press Enter to skip): ", 0),
+                "iterations": get_int_input("Enter number of iterations (default: 4): ", 4),
+                "fade_duration": get_float_input("Enter fade duration in seconds (default: 1): ", 1)
             }
             auto_loop(args)
         elif choice == '4':
+            args = {
+                "input_folder": input("Enter input folder path (press Enter for current folder): ") or os.getcwd(),
+                "silence_duration": get_int_input("Enter silence duration in seconds: "),
+                "position": input("Enter silence position (a: before, d: after, b: both): ").lower()
+            }
+            if args["position"] not in ['a', 'd', 'b']:
+                print("Invalid position. Please enter 'a', 'd', or 'b'.")
+                continue
+            add_silence(args)
+        elif choice == '5':
             print("Exiting the program. Goodbye!")
             break
         else:
