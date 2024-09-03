@@ -108,7 +108,8 @@ def auto_loop(args):
         input_path = os.path.join(input_folder, audio_file)
         output_path = os.path.join(output_folder, f"looped_{audio_file}")
         
-        duration = get_audio_duration(input_path)
+        audio = AudioSegment.from_file(input_path)
+        duration = len(audio) / 1000.0  # Convert to seconds
         
         if duration < min_duration:
             print(f"Skipping {audio_file} (duration less than minimum)")
@@ -116,19 +117,20 @@ def auto_loop(args):
         
         if max_duration and duration > max_duration:
             print(f"Trimming {audio_file} to {max_duration} seconds")
-            temp_path = os.path.join(output_folder, f"temp_{audio_file}")
-            fade_out = min(1, max_duration / 8)
-            subprocess.run(['ffmpeg', '-i', input_path, '-t', str(max_duration), '-af', f'afade=t=out:st={max_duration-fade_out}:d={fade_out}', temp_path])
-            input_path = temp_path
+            audio = audio[:int(max_duration * 1000)]
         
-        concat_list = "|".join([input_path] * iterations)
-        subprocess.run(['ffmpeg', '-i', f"concat:{concat_list}", '-af', f'afade=t=in:st=0:d={fade_duration},afade=t=out:st={iterations*duration-fade_duration}:d={fade_duration}', output_path])
+        # Create the looped audio
+        looped_audio = audio * iterations
         
-        if 'temp_' in input_path:
-            os.remove(input_path)
+        # Apply fade in and fade out
+        fade_duration_ms = int(fade_duration * 1000)
+        looped_audio = looped_audio.fade_in(fade_duration_ms).fade_out(fade_duration_ms)
+        
+        # Export the looped audio
+        looped_audio.export(output_path, format=audio_file.split('.')[-1])
     
     print("Auto-looping completed successfully!")
-
+    
 def main_menu():
     while True:
         print("\nAudio Processing Menu")
