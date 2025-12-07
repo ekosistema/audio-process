@@ -1,119 +1,164 @@
-# Audio Process Tool
+# 🎛️ Audio Process Tool ![v1.0.0](https://img.shields.io/badge/version-1.0.0-blue)
 
-## Table of Contents
-1. Introduction
-2. Installation
-3. Usage
-   1. Shuffle Audio
-   2. Auto Fade
-   3. Auto Loop
-   4. Add Silence
-4. Troubleshooting
-5. File Descriptions
+This project provides a modular set of Python utilities designed to simplify batch audio processing. Whether you are a musician, a developer, or a sound enthusiast, we hope this tool saves you valuable time by automating repetitive editing tasks. 🚀
 
-## 1. Introduction
+The tool is designed to be flexible: it can be used directly from the command line for quick tasks or imported as a library to integrate into your own Python applications.
 
-The Audio Process Tool is a versatile command-line application that allows you to perform various operations on audio files, including shuffling, fading, looping, and adding silence. This manual will guide you through the installation process and explain how to use each feature of the tool.
+---
 
-## 2. Installation
+## 📑 Table of Contents
 
-To install the Audio Process Tool directly from GitHub, follow these steps:
+1. [Overview](#1-overview-)
+2. [Installation & Setup](#2-installation--setup-%EF%B8%8F)
+3. [Module Guide](#3-module-guide-%EF%B8%8F)
+4. [Usage](#4-usage-)
+5. [Troubleshooting](#5-troubleshooting-)
+6. [Project Structure](#6-project-structure-)
+7. [License](#7-license-)
 
-1. Open a terminal.
-2. Run the following command:
-   ```
-   bash <(curl -s https://raw.githubusercontent.com/ekosistema/audio-process/main/install.sh)
-   ```
-3. Follow the on-screen prompts to complete the installation.
+---
 
-The installer will:
-- Check for Python 3 installation
-- Create a virtual environment
-- Install required Python packages
-- Install system dependencies (ffmpeg)
-- Download the main script
-- Create a wrapper script
-- Add the tool to your system PATH
+## 1. Overview 🎧
 
-After installation, restart your terminal or run `source ~/.bashrc` to apply the PATH changes.
+**Audio Process Tool** is a straightforward solution for batch audio manipulation. It is designed to handle common tasks that would otherwise require manual editing of multiple files.
 
-## 3. Usage
+Key capabilities include:
+*   **Batch Processing**: Apply changes to entire folders of audio files (`.mp3`, `.wav`, `.flac`, `.ogg`).
+*   **Automation**: Streamline tasks like fading, looping, or adding silence.
+*   **Creative Tools**: Features like "Shuffle" allow for experimental sound design.
+*   **Dual Mode**: Use it as a CLI (Command Line Interface) or a Python library.
 
-To start the Audio Process Tool, open a terminal and type:
+---
 
+## 2. Installation & Setup 🛠️
+
+### Prerequisites
+
+To ensure the tool runs correctly, please verify you have the following installed:
+
+1.  **Python 3.6+**: The package is built using Python.
+2.  **FFmpeg**: ⚠️ **Important**: This is the underlying engine used for audio processing. The tool will not function without it.
+
+#### Installing FFmpeg
+*   **Windows**: Download the executable from [ffmpeg.org](https://ffmpeg.org/), extract it, and add the `bin` folder to your system's **PATH**.
+*   **macOS**: The easiest method is via Homebrew: `brew install ffmpeg`.
+*   **Linux (Ubuntu/Debian)**: Run `sudo apt-get install ffmpeg`.
+
+### Package Installation
+
+You can install the package by cloning this repository:
+
+```bash
+git clone https://github.com/ekosistema/audio-process.git
+cd audio-process
+pip install .
 ```
-audio_process
+
+For developers who wish to modify the source code:
+
+```bash
+pip install -e .
 ```
 
-You will be presented with a menu offering four options:
+> **Note for Python 3.13+ Users**: If you are using a very recent version of Python, the standard `audioop` module may be missing. You may need to install the compatibility package:
+> `pip install audioop-lts`
 
-1. Shuffle Audio
-2. Auto Fade
-3. Auto Loop
-4. Add Silence
-5. Exit
+---
 
-### 1. Shuffle Audio
+## 3. Module Guide 🎚️
 
-This option allows you to shuffle audio files by splitting them into chunks and randomly rearranging them.
+Below is a detailed description of the available functions to help you understand how they affect your audio files.
 
-When selected, you'll need to provide:
-- Input folder path
-- Minimum duration in seconds
-- Maximum duration to trim (optional)
-- Number of chunks to split the audio into (default: 8)
+### 🔀 Shuffle Audio (`shuffle_audio`)
+*   **Description**: Divides an audio file into multiple segments ("chunks"), randomizes their order, and rejoins them with crossfades.
+*   **Use Case**: Ideal for creative sound design, generating glitch textures, or creating variations of drum loops.
+*   **Key Parameters**:
+    *   `num_chunks`: The number of segments to divide the audio into.
+    *   `min_duration`: Prevents processing files that are too short to be effectively split.
 
-The shuffled audio files will be saved in a "shuffled" subfolder within the input folder.
+### 📉 Auto Fade (`auto_fade`)
+*   **Description**: Applies a smooth Fade In and Fade Out to audio files. It can also trim files that exceed a specified maximum duration.
+*   **Use Case**: Essential for cleaning up samples, preparing audio libraries, or ensuring smooth transitions.
 
-### 2. Auto Fade
+### 🔁 Auto Loop (`auto_loop`)
+*   **Description**: Repeats an audio file a specific number of times and exports it as a new, single file.
+*   **Use Case**: Useful for extending short textures or creating longer rhythmic beds from one-shots.
 
-This option applies a fade-in and fade-out effect to your audio files.
+### 🔇 Add Silence (`add_silence`)
+*   **Description**: Inserts digital silence into the audio file.
+*   **Options**:
+    *   `'a'` (After): Adds silence at the end.
+    *   `'d'` (During/Before): Adds silence at the beginning.
+    *   `'b'` (Both): Adds silence at both the beginning and the end.
+*   **Use Case**: Helpful for separating tracks in a playlist, preparing samples for hardware that requires a lead-in, or standardized spacing.
 
-When selected, you'll need to provide:
-- Input folder path
-- Maximum duration in seconds (optional)
-- Fade duration in seconds
+---
 
-The processed audio files will be saved in a "faded" subfolder within the input folder.
+## 4. Usage 🚀
 
-### 3. Auto Loop
+### Command Line Interface (CLI)
 
-This option allows you to create looped versions of your audio files.
+If you prefer an interactive experience, simply run the command in your terminal:
 
-When selected, you'll need to provide:
-- Input folder path
-- Minimum duration in seconds
-- Maximum duration in seconds (optional)
-- Number of iterations (default: 4)
-- Fade duration in seconds
+```bash
+audioprocess
+```
+*(Or `python audio_process.py` if the package is not installed globally)*
 
-The looped audio files will be saved in a "looped" subfolder within the input folder.
+You will be presented with a menu. Simply follow the on-screen prompts to select an operation and target folder.
 
-### 4. Add Silence
+### Python Library
 
-This option allows you to add silence to the beginning, end, or both sides of your audio files.
+You can import `audioprocess` into your own scripts to leverage its functionality programmatically:
 
-When selected, you'll need to provide:
-- Input folder path
-- Silence duration in seconds
-- Position of the silence (a: before, d: after, b: both)
+```python
+import audioprocess
 
-The processed audio files will be saved in a "silenced" subfolder within the input folder.
+# Example: Process a folder of recordings by adding 2 seconds of silence at the start
+audioprocess.add_silence(
+    input_folder="./my_recordings", 
+    silence_duration=2, 
+    position='d' # 'd' denotes 'during' or before
+)
 
-## 4. Troubleshooting
+# Example: Shuffle drum samples for a creative effect
+audioprocess.shuffle_audio(
+    input_folder="./drums", 
+    num_chunks=8
+)
+```
 
-- If you encounter a "command not found" error when trying to run `audio_process`, make sure you've restarted your terminal or run `source ~/.bashrc` after installation.
-- If you get errors related to missing dependencies, try running the installation command again.
-- For issues with processing specific audio files, ensure that ffmpeg is correctly installed and that the files are in a supported format (.mp3, .wav, .ogg, or .flac).
-- If you have problems with the installation script, make sure you have an active internet connection and that you can access GitHub.
-- If you encounter input errors when entering numeric values, the script will now prompt you to enter a valid number instead of crashing. Simply follow the on-screen instructions to enter a valid input.
+---
 
-## 5. File Descriptions
+## 5. Troubleshooting 🔧
 
-The Audio Process Tool consists of two main files:
+If you encounter issues, please check the following common solutions:
 
-1. `install.sh`: This bash script handles the installation of the tool, including setting up the environment and dependencies. It is hosted on GitHub and can be run directly using curl.
+**🔴 Error: `FileNotFoundError: [WinError 2] The system cannot find the file specified`**
+*   **Cause**: This usually indicates that **FFmpeg** is not installed or not found in your system's PATH.
+*   **Solution**: Please refer to the [Installation](#installation--setup-%EF%B8%8F) section to ensure FFmpeg is correctly configured. Verifying with `ffmpeg -version` in your terminal should return the version information.
 
-2. `audio_process.py`: This Python script contains the main functionality of the Audio Process Tool, including the shuffle_audio, auto_fade, auto_loop, and add_silence functions, as well as the main menu interface. It is downloaded during the installation process.
+**🔴 Error: `ModuleNotFoundError: No module named 'audioop'`**
+*   **Cause**: This occurs on Python 3.13 or newer due to the removal of the module from the standard library.
+*   **Solution**: Install the support package by running: `pip install audioop-lts`.
 
-These files work together to provide a seamless audio process experience. The installer script sets up everything needed to run the Python script, and the Python script handles the actual audio processing tasks.
+**🔴 Permission Errors**
+*   **Cause**: The script may not have permission to write to certain system folders.
+*   **Solution**: Ensure you are running the script in a user-writable directory (like Documents or a project folder). On some systems, running as Administrator or using `sudo` may be required, though it is generally safer to change the working directory.
+
+---
+
+## 6. Project Structure 📂
+
+*   `audioprocess/`: Contains the source code.
+    *   `processing.py`: Core logic for audio manipulations.
+    *   `cli.py`: Handles the interactive command-line menu.
+*   `setup.py`: Configuration file for package installation.
+*   `install.sh`: A helper script for Linux/macOS installation.
+
+---
+
+## 7. License ✨
+
+Developed by **CeleroLab**.
+This project is open-source and licensed under the **MIT License**. You are free to use, modify, and distribute it.
