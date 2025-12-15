@@ -154,7 +154,6 @@ If you encounter issues, please check the following common solutions:
     *   `processing.py`: Core logic for audio manipulations.
     *   `cli.py`: Handles the interactive command-line menu.
 *   `setup.py`: Configuration file for package installation.
-*   `install.sh`: A helper script for Linux/macOS installation.
 
 ---
 
