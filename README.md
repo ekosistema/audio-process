@@ -1,8 +1,8 @@
-# 🎛️ Audio Process Tool ![v1.0.0](https://img.shields.io/badge/version-1.0.0-blue)
+# 🎛️ Audio Process Tool ![v1.1.0](https://img.shields.io/badge/version-1.1.0-blue)
 
-This project provides a modular set of Python utilities designed to simplify batch audio processing. Whether you are a musician, a developer, or a sound enthusiast, we hope this tool saves you valuable time by automating repetitive editing tasks. 🚀
+This project provides a modular set of Python utilities designed to simplify audio processing. Whether you are a musician, a developer, or a sound enthusiast, I hope this tool saves you valuable time by automating repetitive editing tasks. 🚀
 
-The tool is designed to be flexible: it can be used directly from the command line for quick tasks or imported as a library to integrate into your own Python applications.
+The tool is designed to be flexible: it can be used directly from the command line for quick batch tasks or imported as a modern object-oriented library to integrate into your own Python applications.
 
 ---
 
@@ -10,19 +10,21 @@ The tool is designed to be flexible: it can be used directly from the command li
 
 1. [Overview](#1-overview-)
 2. [Installation & Setup](#2-installation--setup-%EF%B8%8F)
-3. [Module Guide](#3-module-guide-%EF%B8%8F)
-4. [Usage](#4-usage-)
-5. [Troubleshooting](#5-troubleshooting-)
-6. [Project Structure](#6-project-structure-)
-7. [License](#7-license-)
+3. [Library Usage (New)](#3-library-usage-new-%EF%B8%8F)
+4. [Module Guide](#4-module-guide-%EF%B8%8F)
+5. [CLI Usage](#5-cli-usage-)
+6. [Troubleshooting](#6-troubleshooting-)
+7. [Project Structure](#7-project-structure-)
+8. [License](#8-license-)
 
 ---
 
 ## 1. Overview 🎧
 
-**Audio Process Tool** is a straightforward solution for batch audio manipulation. It is designed to handle common tasks that would otherwise require manual editing of multiple files.
+**Audio Process Tool** is a robust solution for audio manipulation. It is designed to handle common tasks that would otherwise require manual editing.
 
 Key capabilities include:
+*   **Method Chaining**: Use the new `AudioTrack` class for a Fluent Interface (e.g., `track.trim().fade().export()`).
 *   **Batch Processing**: Apply changes to entire folders of audio files (`.mp3`, `.wav`, `.flac`, `.ogg`).
 *   **Automation**: Streamline tasks like fading, looping, or adding silence.
 *   **Creative Tools**: Features like "Shuffle" allow for experimental sound design.
@@ -36,7 +38,7 @@ Key capabilities include:
 
 To ensure the tool runs correctly, please verify you have the following installed:
 
-1.  **Python 3.6+**: The package is built using Python.
+1.  **Python 3.10+**: The package utilizes modern Python features.
 2.  **FFmpeg**: ⚠️ **Important**: This is the underlying engine used for audio processing. The tool will not function without it.
 
 #### Installing FFmpeg
@@ -60,21 +62,56 @@ For developers who wish to modify the source code:
 pip install -e .
 ```
 
+> **Note**: This project uses `pyproject.toml` for configuration. Pip will automatically handle the build process.
+
 > **Note for Python 3.13+ Users**: If you are using a very recent version of Python, the standard `audioop` module may be missing. You may need to install the compatibility package:
 > `pip install audioop-lts`
 
 ---
 
-## 3. Module Guide 🎚️
+## 3. Library Usage (New) 🏗️
 
-Below is a detailed description of the available functions to help you understand how they affect your audio files.
+The library has been refactored to use a modern **Fluent Interface** pattern. You can now perform complex chains of operations on individual files with ease.
+
+### The `AudioTrack` Class
+
+```python
+from audioprocess import AudioTrack, AudioProcessError
+
+try:
+    # process a single file
+    (AudioTrack("guitar.wav")
+        .trim(max_duration=15.0)       # Crop to 15 seconds
+        .loop(iterations=2)            # Loop it twice
+        .fade(duration=2.0)            # Fade in and out
+        .add_silence(1.0, 'end')       # Add 1s silence at the end
+        .export("guitar_processed.wav") # Save result
+    )
+    print("Processing complete!")
+
+except AudioProcessError as e:
+    print(f"An error occurred: {e}")
+```
+
+### Key Methods
+
+*   **`load(path)`**: Load a new file into the track.
+*   **`trim(max_duration)`**: Cut the audio if it exceeds the duration.
+*   **`fade(duration, direction="both")`**: Apply fade in/out.
+*   **`loop(iterations)`**: Repeat the audio.
+*   **`add_silence(duration, position="start")`**: Insert silence ('start', 'end', 'both').
+*   **`shuffle(num_chunks)`**: Randomize the audio segments.
+*   **`save(path)`** / **`export(path, format)`**: Write the result to disk.
+
+---
+
+## 4. Module Guide 🎚️
+
+Legacy batch processing functions are also available for processing entire folders at once. These now utilize the `AudioTrack` class internally.
 
 ### 🔀 Shuffle Audio (`shuffle_audio`)
 *   **Description**: Divides an audio file into multiple segments ("chunks"), randomizes their order, and rejoins them with crossfades.
 *   **Use Case**: Ideal for creative sound design, generating glitch textures, or creating variations of drum loops.
-*   **Key Parameters**:
-    *   `num_chunks`: The number of segments to divide the audio into.
-    *   `min_duration`: Prevents processing files that are too short to be effectively split.
 
 ### 📉 Auto Fade (`auto_fade`)
 *   **Description**: Applies a smooth Fade In and Fade Out to audio files. It can also trim files that exceed a specified maximum duration.
@@ -86,17 +123,11 @@ Below is a detailed description of the available functions to help you understan
 
 ### 🔇 Add Silence (`add_silence`)
 *   **Description**: Inserts digital silence into the audio file.
-*   **Options**:
-    *   `'a'` (After): Adds silence at the end.
-    *   `'d'` (During/Before): Adds silence at the beginning.
-    *   `'b'` (Both): Adds silence at both the beginning and the end.
 *   **Use Case**: Helpful for separating tracks in a playlist, preparing samples for hardware that requires a lead-in, or standardized spacing.
 
 ---
 
-## 4. Usage 🚀
-
-### Command Line Interface (CLI)
+## 5. CLI Usage 🚀
 
 If you prefer an interactive experience, simply run the command in your terminal:
 
@@ -105,32 +136,11 @@ audioprocess
 ```
 *(Or `python audio_process.py` if the package is not installed globally)*
 
-You will be presented with a menu. Simply follow the on-screen prompts to select an operation and target folder.
-
-### Python Library
-
-You can import `audioprocess` into your own scripts to leverage its functionality programmatically:
-
-```python
-import audioprocess
-
-# Example: Process a folder of recordings by adding 2 seconds of silence at the start
-audioprocess.add_silence(
-    input_folder="./my_recordings", 
-    silence_duration=2, 
-    position='d' # 'd' denotes 'during' or before
-)
-
-# Example: Shuffle drum samples for a creative effect
-audioprocess.shuffle_audio(
-    input_folder="./drums", 
-    num_chunks=8
-)
-```
+You will be presented with a menu to select an operation and target folder.
 
 ---
 
-## 5. Troubleshooting 🔧
+## 6. Troubleshooting 🔧
 
 If you encounter issues, please check the following common solutions:
 
@@ -142,22 +152,20 @@ If you encounter issues, please check the following common solutions:
 *   **Cause**: This occurs on Python 3.13 or newer due to the removal of the module from the standard library.
 *   **Solution**: Install the support package by running: `pip install audioop-lts`.
 
-**🔴 Permission Errors**
-*   **Cause**: The script may not have permission to write to certain system folders.
-*   **Solution**: Ensure you are running the script in a user-writable directory (like Documents or a project folder). On some systems, running as Administrator or using `sudo` may be required, though it is generally safer to change the working directory.
-
 ---
 
-## 6. Project Structure 📂
+## 7. Project Structure 📂
 
 *   `audioprocess/`: Contains the source code.
-    *   `processing.py`: Core logic for audio manipulations.
+    *   `track.py`: **[NEW]** The core `AudioTrack` class with Fluent Interface.
+    *   `exceptions.py`: **[NEW]** Custom error definitions.
+    *   `processing.py`: Batch processing logic (refactored).
     *   `cli.py`: Handles the interactive command-line menu.
-*   `setup.py`: Configuration file for package installation.
+*   `pyproject.toml`: Modern configuration file for package installation (replacing `setup.py`).
 
 ---
 
-## 7. License ✨
+## 8. License ✨
 
 Developed by **CeleroLab**.
 This project is open-source and licensed under the **MIT License**. You are free to use, modify, and distribute it.

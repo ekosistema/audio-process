@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "audioprocess"
+version = "1.1.0"
+description = "A modular Python package for audio processing with a fluent interface."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "CeleroLab"}
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "pydub",
+  "tqdm",
+  "audioop-lts; python_version >= '3.13'",
+]
+
+[project.scripts]
+audioprocess = "audioprocess.cli:main_menu"
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -7,160 +7,166 @@ Author: CeleroLab
 License: MIT
 """
 
-import os
-import random
-from pydub import AudioSegment
+import sys
+import shutil
+from pathlib import Path
 from tqdm import tqdm
-from .utils import get_audio_duration
+from .track import AudioTrack
+from .exceptions import AudioProcessError
 
 def shuffle_audio(input_folder, min_duration=0, max_duration=0, num_chunks=8):
-    if input_folder is None:
-         input_folder = os.getcwd()
+    """
+    Shuffle audio files in the input folder.
 
-    temp_folder = os.path.join(input_folder, ".temp")
-    output_folder = os.path.join(input_folder, "shuffled")
-    
-    os.makedirs(temp_folder, exist_ok=True)
-    os.makedirs(output_folder, exist_ok=True)
+    Args:
+        input_folder (str): Path to input folder.
+        min_duration (float): Minimum duration to process.
+        max_duration (float): Maximum duration to process (trim).
+        num_chunks (int): Number of chunks for shuffling.
+    """
+    in_path = Path(input_folder or Path.cwd())
+    out_path = in_path / "shuffled"
+    out_path.mkdir(exist_ok=True)
 
-    audio_files = [f for f in os.listdir(input_folder) if f.endswith(('.mp3', '.wav', '.ogg', '.flac'))]
-    
-    for file in tqdm(audio_files, desc="Shuffling Files"):
-        input_path = os.path.join(input_folder, file)
-        output_path = os.path.join(output_folder, f"shuffled_{file}")
+    # Filter for audio files
+    audio_files = [f for f in in_path.iterdir() if f.suffix.lower() in ('.mp3', '.wav', '.ogg', '.flac')]
+
+    try:
+        for file_path in tqdm(audio_files, desc="Shuffling Files"):
+            try:
+                track = AudioTrack(file_path)
+                
+                if track.duration < min_duration:
+                    tqdm.write(f"Skipping {file_path.name} (duration: {track.duration:.2f}s < minimum: {min_duration}s)")
+                    continue
+
+                (track
+                    .trim(max_duration)
+                    .shuffle(num_chunks)
+                    .save(out_path / f"shuffled_{file_path.name}")
+                )
+
+            except AudioProcessError as e:
+                tqdm.write(f"Error processing {file_path.name}: {e}")
+            except Exception as e:
+                tqdm.write(f"Unexpected error on {file_path.name}: {e}")
+                
+        print("Audio shuffling completed successfully!")
         
-        duration = get_audio_duration(input_path)
-        
-        if duration < min_duration:
-            print(f"Skipping {file} (duration: {duration}s < minimum: {min_duration}s)")
-            continue
-        
-        audio = AudioSegment.from_file(input_path)
-        
-        if max_duration and duration > max_duration:
-            audio = audio[:int(max_duration * 1000)]
-        
-        chunk_duration = len(audio) // num_chunks
-        chunks = [audio[i*chunk_duration:(i+1)*chunk_duration] for i in range(num_chunks)]
-        
-        fade_duration = len(audio) // 20
-        chunks = [chunk.fade_out(duration=fade_duration) for chunk in chunks]
-        
-        chunk_files = []
-        for i, chunk in enumerate(chunks):
-            chunk_path = os.path.join(temp_folder, f"chunk_{i}_{file}")
-            chunk.export(chunk_path, format=file.split('.')[-1])
-            chunk_files.append(chunk_path)
-        
-        random.shuffle(chunk_files)
-        shuffled_audio = AudioSegment.empty()
-        for chunk_file in chunk_files:
-            shuffled_audio += AudioSegment.from_file(chunk_file)
-        
-        shuffled_audio = shuffled_audio.fade_in(50).fade_out(50)
-        
-        shuffled_audio.export(output_path, format=file.split('.')[-1])
-        
-        for chunk_file in chunk_files:
-            os.remove(chunk_file)
-    
-    os.rmdir(temp_folder)
-    print("Audio shuffling completed successfully!")
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user (Ctrl+C). Exiting...")
+        return
 
 def auto_fade(input_folder, max_duration=0, fade_duration=1):
-    if input_folder is None:
-         input_folder = os.getcwd()
+    """
+    Apply auto-fade to audio files.
 
-    temp_folder = os.path.join(input_folder, ".temp") 
+    Args:
+        input_folder (str): Path to input folder.
+        max_duration (float): Maximum duration (trim).
+        fade_duration (float): Duration of fade in/out.
+    """
+    in_path = Path(input_folder or Path.cwd())
+    out_path = in_path / "faded"
+    out_path.mkdir(exist_ok=True)
 
-    output_folder = os.path.join(input_folder, "faded")
-    os.makedirs(temp_folder, exist_ok=True)
-    os.makedirs(output_folder, exist_ok=True)
+    audio_files = [f for f in in_path.iterdir() if f.suffix.lower() in ('.mp3', '.wav', '.ogg', '.flac')]
 
-    audio_files = [f for f in os.listdir(input_folder) if f.endswith(('.mp3', '.wav', '.ogg', '.flac'))]
-    
-    for file in tqdm(audio_files, desc="Fading Files"):
-        input_path = os.path.join(input_folder, file)
-        output_path = os.path.join(output_folder, f"faded_{file}")
-        
-        audio = AudioSegment.from_file(input_path)
-        
-        if max_duration and len(audio) > max_duration * 1000:
-            audio = audio[:int(max_duration * 1000)]
-            fade_out_duration = int(len(audio) * 0.125)
-            audio = audio.fade_out(fade_out_duration)
-        
-        audio = audio.fade_in(int(fade_duration * 1000)).fade_out(int(fade_duration * 1000))
-        audio.export(output_path, format=file.split('.')[-1])
-    
     try:
-        os.rmdir(temp_folder)
-    except OSError:
-        pass # Directory might not be empty or not exist
-        
-    print("Auto-fading completed successfully!")
+        for file_path in tqdm(audio_files, desc="Fading Files"):
+            try:
+                track = AudioTrack(file_path)
+                
+                (track
+                    .trim(max_duration)
+                    .fade(fade_duration, direction="both")
+                    .save(out_path / f"faded_{file_path.name}")
+                )
+                
+            except AudioProcessError as e:
+                tqdm.write(f"Error processing {file_path.name}: {e}")
+                
+        print("Auto-fading completed successfully!")
+
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user (Ctrl+C). Exiting...")
+        return
 
 def auto_loop(input_folder, min_duration=0, max_duration=0, iterations=4, fade_duration=1):
-    if input_folder is None:
-         input_folder = os.getcwd()
+    """
+    Loop audio files.
 
-    output_folder = os.path.join(input_folder, 'looped')
-    os.makedirs(output_folder, exist_ok=True)
+    Args:
+        input_folder (str): Input folder path.
+        min_duration (float): Minimum duration filter.
+        max_duration (float): Max duration to trim before looping.
+        iterations (int): Number of loops.
+        fade_duration (float): Fade duration.
+    """
+    in_path = Path(input_folder or Path.cwd())
+    out_path = in_path / 'looped'
+    out_path.mkdir(exist_ok=True)
     
-    audio_files = [f for f in os.listdir(input_folder) if f.endswith(('.mp3', '.wav', '.ogg', '.flac'))]
+    audio_files = [f for f in in_path.iterdir() if f.suffix.lower() in ('.mp3', '.wav', '.ogg', '.flac')]
     
-    for audio_file in tqdm(audio_files, desc="Looping Files"):
-        input_path = os.path.join(input_folder, audio_file)
-        output_path = os.path.join(output_folder, f"looped_{audio_file}")
+    try:
+        for file_path in tqdm(audio_files, desc="Looping Files"):
+            try:
+                track = AudioTrack(file_path)
+
+                if track.duration < min_duration:
+                    tqdm.write(f"Skipping {file_path.name} (duration less than minimum)")
+                    continue
+                    
+                (track
+                    .trim(max_duration)
+                    .loop(iterations)
+                    .fade(fade_duration) 
+                    .save(out_path / f"looped_{file_path.name}")
+                )
+                
+            except AudioProcessError as e:
+                tqdm.write(f"Error processing {file_path.name}: {e}")
+
+        print("Auto-looping completed successfully!")
         
-        audio = AudioSegment.from_file(input_path)
-        duration = len(audio) / 1000.0  # Convert to seconds
-        
-        if duration < min_duration:
-            print(f"Skipping {audio_file} (duration less than minimum)")
-            continue
-        
-        if max_duration and duration > max_duration:
-            print(f"Trimming {audio_file} to {max_duration} seconds")
-            audio = audio[:int(max_duration * 1000)]
-        
-        # Create the looped audio
-        looped_audio = audio * iterations
-        
-        # Apply fade in and fade out
-        fade_duration_ms = int(fade_duration * 1000)
-        looped_audio = looped_audio.fade_in(fade_duration_ms).fade_out(fade_duration_ms)
-        
-        # Export the looped audio
-        looped_audio.export(output_path, format=audio_file.split('.')[-1])
-    
-    print("Auto-looping completed successfully!")
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user (Ctrl+C). Exiting...")
+        return
 
 def add_silence(input_folder, silence_duration, position):
-    if input_folder is None:
-         input_folder = os.getcwd()
+    """
+    Add silence to audio files.
 
-    output_folder = os.path.join(input_folder, "silenced")
-    os.makedirs(output_folder, exist_ok=True)
+    Args:
+        input_folder (str): Input folder path.
+        silence_duration (float): Silence duration in seconds.
+        position (str): 'a' (start), 'd' (end), 'b' (both).
+    """
+    in_path = Path(input_folder or Path.cwd())
+    out_path = in_path / "silenced"
+    out_path.mkdir(exist_ok=True)
 
-    audio_files = [f for f in os.listdir(input_folder) if f.endswith(('.mp3', '.wav', '.ogg', '.flac'))]
+    audio_files = [f for f in in_path.iterdir() if f.suffix.lower() in ('.mp3', '.wav', '.ogg', '.flac')]
     
-    for file in tqdm(audio_files, desc="Adding Silence"):
-        input_path = os.path.join(input_folder, file)
-        output_path = os.path.join(output_folder, f"silenced_{file}")
+    pos_map = {'a': 'start', 'd': 'end', 'b': 'both'}
+    new_pos = pos_map.get(position, 'start')
+
+    try:
+        for file_path in tqdm(audio_files, desc="Adding Silence"):
+            try:
+                track = AudioTrack(file_path)
+                
+                (track
+                    .add_silence(silence_duration, position=new_pos)
+                    .save(out_path / f"silenced_{file_path.name}")
+                )
+                
+            except AudioProcessError as e:
+                tqdm.write(f"Error processing {file_path.name}: {e}")
+
+        print("Silence addition completed successfully!")
         
-        audio = AudioSegment.from_file(input_path)
-        silence = AudioSegment.silent(duration=silence_duration * 1000)  # Convert to milliseconds
-        
-        if position == 'a':
-            modified_audio = silence + audio
-        elif position == 'd':
-            modified_audio = audio + silence
-        elif position == 'b':
-            modified_audio = silence + audio + silence
-        else:
-            modified_audio = audio
-        
-        modified_audio.export(output_path, format=file.split('.')[-1])
-    
-    print("Silence addition completed successfully!")
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user (Ctrl+C). Exiting...")
+        return

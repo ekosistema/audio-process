@@ -13,3 +13,5 @@ __license__ = "MIT"
 
 from .utils import get_audio_duration
 from .processing import shuffle_audio, auto_fade, auto_loop, add_silence
+from .track import AudioTrack
+from .exceptions import AudioProcessError
